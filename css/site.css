@@ -691,3 +691,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .nav__right { grid-column: 2; margin-right: 1.5vw; gap: 14px; }
   .nav__lang { font-size: 12px; }
 }
+@media (min-width: 901px) and (min-aspect-ratio: 4/5) {
+  .orbit__stage { width: min(100%, calc((100svh - 150px) * 16 / 9)); }
+}

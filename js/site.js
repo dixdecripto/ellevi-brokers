@@ -156,16 +156,17 @@
     var oq = function (s) { return $$(s, orbit); };
     var draw = function (els) { gsap.set(els, { strokeDasharray: 1, strokeDashoffset: 1 }); return els; };
     var gv = draw(oq('[data-gv], [data-gaxt]')), eqs = draw(oq('[data-geq]')), axd = draw(oq('[data-gax]')), axu = draw(oq('[data-gaxu]')),
-      els = oq('[data-gel]');
-    var otl = gsap.timeline({ defaults: { ease: 'sine.inOut' },
-      scrollTrigger: { trigger: $('[data-orbit-pin]', orbit), start: 'top top', end: '+=240%', pin: true, scrub: 2, invalidateOnRefresh: true } });
-    otl.to(gv, { strokeDashoffset: 0, duration: 0.3, stagger: { each: 0.02, from: 'center' } }, 0)
-      .to(eqs, { strokeDashoffset: 0, duration: 0.35 }, 0.12)
-      .to([axd, axu], { strokeDashoffset: 0, duration: 0.35 }, 0.12);
-    els.forEach(function (el, i) {
-      otl.fromTo(el, { attr: { rx: 0 }, opacity: 0 }, { attr: { rx: +el.getAttribute('data-rx') }, opacity: 1, duration: 0.42, ease: 'power2.inOut' }, 0.3 + i * 0.12);
-    });
-    otl.to(gv, { opacity: 0, duration: 0.3, stagger: { each: 0.03, from: 'center' } }, 0.55)
+      lo = draw(oq('[data-glo]')), up = draw(oq('[data-gup]')), dg = draw(oq('[data-gdg]'));
+    var otl = gsap.timeline({ defaults: { ease: 'none' },
+      scrollTrigger: { trigger: $('[data-orbit-pin]', orbit), start: 'top top', end: '+=300%', pin: true, scrub: 1.2, invalidateOnRefresh: true } });
+    otl.to(gv, { strokeDashoffset: 0, duration: 0.3 }, 0)
+      .to(lo, { strokeDashoffset: 0, duration: 0.3 }, 0.3)
+      .to(eqs, { strokeDashoffset: 0, duration: 0.3 }, 0.3)
+      .to(axd, { strokeDashoffset: 0, duration: 0.3 }, 0.3)
+      .to(up, { strokeDashoffset: 0, duration: 0.3 }, 0.6)
+      .to(axu, { strokeDashoffset: 0, duration: 0.3 }, 0.6)
+      .to(dg, { strokeDashoffset: 0, duration: 0.3 }, 0.6)
+      .to(gv, { opacity: 0, duration: 0.3 }, 0.6)
       .set({}, {}, 1);
     var logoW = $('[data-logo]', orbit), tags = $$('.orbit__tag', orbit);
     gsap.timeline({ scrollTrigger: { trigger: orbit, start: 'top 55%', toggleActions: 'play none none reverse' } })
