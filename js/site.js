@@ -155,23 +155,32 @@
   if (orbit) {
     var oq = function (s) { return $$(s, orbit); };
     var draw = function (els) { gsap.set(els, { strokeDasharray: 1, strokeDashoffset: 1 }); return els; };
+    var svg = $('.orbit__svg', orbit), C = 960, XS = [48, 352, 656, 1264, 1568, 1872];
+    var geo = function () {
+      var s = svg.getBoundingClientRect().width / 1920 || 1, half = innerHeight / 2 / s;
+      var E = 540, ry = Math.min(460, half - 90 / s), T = E - ry, B = E + ry, top = E - half - 40 / s;
+      oq('[data-gv]').forEach(function (l, i) { l.setAttribute('x1', XS[i]); l.setAttribute('x2', XS[i]); l.setAttribute('y1', top); l.setAttribute('y2', E); });
+      oq('[data-gaxt]').forEach(function (l) { l.setAttribute('y1', top); l.setAttribute('y2', E); });
+      oq('[data-geq]').forEach(function (l) { l.setAttribute('y1', E); l.setAttribute('y2', E); });
+      oq('[data-gax]').forEach(function (l) { l.setAttribute('y1', E); l.setAttribute('y2', B + 40); });
+      oq('[data-gaxu]').forEach(function (l) { l.setAttribute('y1', E); l.setAttribute('y2', T - 40); });
+      oq('[data-glo]').forEach(function (p, i) { var x = XS[i], L = x < C; p.setAttribute('d', 'M' + x + ' ' + E + ' A' + Math.abs(C - x) + ' ' + ry + ' 0 0 ' + (L ? 0 : 1) + ' ' + C + ' ' + B); });
+      oq('[data-gup]').forEach(function (p, i) { var x = XS[i], L = x < C; p.setAttribute('d', 'M' + x + ' ' + E + ' A' + Math.abs(C - x) + ' ' + ry + ' 0 0 ' + (L ? 1 : 0) + ' ' + C + ' ' + T); });
+      oq('[data-gdg]').forEach(function (l, i) { l.setAttribute('y1', E); l.setAttribute('y2', i < 2 ? T : B); });
+    };
+    geo();
     var gv = draw(oq('[data-gv], [data-gaxt]')), eqs = draw(oq('[data-geq]')), axd = draw(oq('[data-gax]')), axu = draw(oq('[data-gaxu]')),
       lo = draw(oq('[data-glo]')), up = draw(oq('[data-gup]')), dg = draw(oq('[data-gdg]'));
+    var logoW = $('[data-logo]', orbit), tags = $$('.orbit__tag', orbit), pinEl = $('[data-orbit-pin]', orbit);
+    ScrollTrigger.create({ trigger: pinEl, start: 'top top', end: '+=200%', pin: true, onRefreshInit: geo });
     var otl = gsap.timeline({ defaults: { ease: 'none' },
-      scrollTrigger: { trigger: $('[data-orbit-pin]', orbit), start: 'top top', end: '+=300%', pin: true, scrub: 1.2, invalidateOnRefresh: true } });
-    otl.to(gv, { strokeDashoffset: 0, duration: 0.3 }, 0)
-      .to(lo, { strokeDashoffset: 0, duration: 0.3 }, 0.3)
-      .to(eqs, { strokeDashoffset: 0, duration: 0.3 }, 0.3)
-      .to(axd, { strokeDashoffset: 0, duration: 0.3 }, 0.3)
-      .to(up, { strokeDashoffset: 0, duration: 0.3 }, 0.6)
-      .to(axu, { strokeDashoffset: 0, duration: 0.3 }, 0.6)
-      .to(dg, { strokeDashoffset: 0, duration: 0.3 }, 0.6)
-      .to(gv, { opacity: 0, duration: 0.3 }, 0.6)
-      .set({}, {}, 1);
-    var logoW = $('[data-logo]', orbit), tags = $$('.orbit__tag', orbit);
-    gsap.timeline({ scrollTrigger: { trigger: orbit, start: 'top 55%', toggleActions: 'play none none reverse' } })
-      .from(logoW, { y: 50, opacity: 0, scale: 0.9, duration: 1.5, ease: E }, 0)
-      .from(tags, { opacity: 0, y: 18, duration: 1.1, ease: E, stagger: 0.12 }, 0.3);
+      scrollTrigger: { trigger: orbit, start: 'top bottom', end: 'bottom bottom', scrub: 0.6, invalidateOnRefresh: true } });
+    otl.to(gv, { strokeDashoffset: 0, duration: 1 }, 0)
+      .to(lo.concat(eqs, axd), { strokeDashoffset: 0, duration: 1 }, 1)
+      .to(up.concat(axu, dg), { strokeDashoffset: 0, duration: 1 }, 2)
+      .to(gv, { opacity: 0, duration: 1 }, 2)
+      .fromTo(logoW, { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 1.4 }, 0.6)
+      .fromTo(tags, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.2 }, 1.2);
     var logo = $('img', logoW);
     if (!coarse) {
       var rx = gsap.quickTo(logo, 'rotateY', { duration: 1.2, ease: 'power3' });
