@@ -694,3 +694,4 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .fall-lines { position: fixed; inset: 0; z-index: 3; pointer-events: none; clip-path: inset(0 0 100% 0); }
 .fall-lines .gridlines { z-index: 0; }
 [data-page="home"] .hero .gridlines { display: none; }
+.orbit__svg line, .orbit__svg path { vector-effect: none; stroke-width: var(--sw, 1); }

@@ -154,10 +154,17 @@
   var orbit = $('[data-orbit]');
   if (orbit) {
     var oq = function (s) { return $$(s, orbit); };
-    var draw = function (els) { gsap.set(els, { strokeDasharray: 1, strokeDashoffset: 1 }); return els; };
+    var L = function (el) { return el.getTotalLength ? el.getTotalLength() + 2 : 3000; };
+    var draw = function (els) { els.forEach(function (el) { el.removeAttribute('pathLength'); }); return els; };
+    var grow = function (els, vars, at) {
+      otl.fromTo(els, { strokeDasharray: function (i, el) { return L(el); }, strokeDashoffset: function (i, el) { return L(el); } },
+        Object.assign({ strokeDashoffset: 0, immediateRender: true }, vars), at);
+    };
     var svg = $('.orbit__svg', orbit), C = 960, XS = [48, 352, 656, 1264, 1568, 1872];
     var geo = function () {
-      var s = svg.getBoundingClientRect().width / 1920 || 1, half = innerHeight / 2 / s;
+      var s = svg.getBoundingClientRect().width / 1920 || 1;
+      svg.style.setProperty('--sw', (1 / s).toFixed(3));
+      var half = innerHeight / 2 / s;
       var E = 540, ry = Math.min(460, half - 90 / s), T = E - ry, B = E + ry, top = E - half - 40 / s;
       oq('[data-gv]').forEach(function (l, i) { l.setAttribute('x1', XS[i]); l.setAttribute('x2', XS[i]); l.setAttribute('y1', top); l.setAttribute('y2', E); });
       oq('[data-gaxt]').forEach(function (l) { l.setAttribute('y1', top); l.setAttribute('y2', E); });
@@ -179,17 +186,18 @@
     document.body.appendChild(fall);
     var otl = gsap.timeline({ defaults: { ease: 'none' },
       scrollTrigger: { trigger: pinEl, start: 'top top', end: '+=240%', pin: true, scrub: 0.5, invalidateOnRefresh: true, onRefreshInit: geo } });
-    otl.to({}, { duration: 0.5 }, 0)
-      .to(lo.concat(eqs, axd), { strokeDashoffset: 0, duration: 1 }, 0.5)
-      .to(up.concat(axu, dg), { strokeDashoffset: 0, duration: 1 }, 1.5)
+    otl.to({}, { duration: 0.2 }, 0)
+      .set({}, {}, 2.5)
       .fromTo(logoW, { opacity: 0, y: 80, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 1.2 }, 0)
       .fromTo(tags, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.2 }, 0.8);
+    grow(lo.concat(eqs, axd), { duration: 1 }, 0.2);
+    grow(up.concat(axu, dg), { duration: 1 }, 1.2);
     var fallUpd = function () {
       var st = otl.scrollTrigger; if (!st) return;
-      var y = window.scrollY, d = st.end - st.start, reach = st.start + d * 0.5 / 2.5;
+      var y = window.scrollY, d = st.end - st.start, reach = st.start * 0.6; // più veloci: all'equatore prima del fermo
       var r = svg.getBoundingClientRect(), eqY = (st.progress > 0 && st.progress < 1 ? r.top : (innerHeight - r.height) / 2) + 540 * r.width / 1920;
       var h = Math.max(0, Math.min(1, y / reach)) * eqY;
-      var o = 1 - Math.max(0, Math.min(1, (y - (st.start + d * 1.5 / 2.5)) / (d / 2.5)));
+      var o = 1 - Math.max(0, Math.min(1, (y - (st.start + d * 1.2 / 2.5)) / (d / 2.5)));
       fall.style.clipPath = 'inset(0 0 ' + Math.max(0, innerHeight - h) + 'px 0)';
       fall.style.opacity = y > st.end ? 0 : o;
     };
