@@ -172,15 +172,28 @@
     var gv = draw(oq('[data-gv], [data-gaxt]')), eqs = draw(oq('[data-geq]')), axd = draw(oq('[data-gax]')), axu = draw(oq('[data-gaxu]')),
       lo = draw(oq('[data-glo]')), up = draw(oq('[data-gup]')), dg = draw(oq('[data-gdg]'));
     var logoW = $('[data-logo]', orbit), tags = $$('.orbit__tag', orbit), pinEl = $('[data-orbit-pin]', orbit);
-    ScrollTrigger.create({ trigger: pinEl, start: 'top top', end: '+=200%', pin: true, onRefreshInit: geo });
+    gsap.set(gv, { opacity: 0 });
+    var fall = document.createElement('div');
+    fall.className = 'fall-lines'; fall.setAttribute('aria-hidden', 'true');
+    fall.innerHTML = '<div class="gridlines">' + '<span></span>'.repeat(6) + '</div>';
+    document.body.appendChild(fall);
     var otl = gsap.timeline({ defaults: { ease: 'none' },
-      scrollTrigger: { trigger: orbit, start: 'top bottom', end: 'bottom bottom', scrub: 0.6, invalidateOnRefresh: true } });
-    otl.to(gv, { strokeDashoffset: 0, duration: 1 }, 0)
-      .to(lo.concat(eqs, axd), { strokeDashoffset: 0, duration: 1 }, 1)
-      .to(up.concat(axu, dg), { strokeDashoffset: 0, duration: 1 }, 2)
-      .to(gv, { opacity: 0, duration: 1 }, 2)
-      .fromTo(logoW, { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 1.4 }, 0.6)
-      .fromTo(tags, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.2 }, 1.2);
+      scrollTrigger: { trigger: pinEl, start: 'top top', end: '+=240%', pin: true, scrub: 0.5, invalidateOnRefresh: true, onRefreshInit: geo } });
+    otl.to({}, { duration: 0.5 }, 0)
+      .to(lo.concat(eqs, axd), { strokeDashoffset: 0, duration: 1 }, 0.5)
+      .to(up.concat(axu, dg), { strokeDashoffset: 0, duration: 1 }, 1.5)
+      .fromTo(logoW, { opacity: 0, y: 80, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 1.2 }, 0)
+      .fromTo(tags, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.2 }, 0.8);
+    var fallUpd = function () {
+      var st = otl.scrollTrigger; if (!st) return;
+      var y = window.scrollY, d = st.end - st.start, reach = st.start + d * 0.5 / 2.5;
+      var r = svg.getBoundingClientRect(), eqY = (st.progress > 0 && st.progress < 1 ? r.top : (innerHeight - r.height) / 2) + 540 * r.width / 1920;
+      var h = Math.max(0, Math.min(1, y / reach)) * eqY;
+      var o = 1 - Math.max(0, Math.min(1, (y - (st.start + d * 1.5 / 2.5)) / (d / 2.5)));
+      fall.style.clipPath = 'inset(0 0 ' + Math.max(0, innerHeight - h) + 'px 0)';
+      fall.style.opacity = y > st.end ? 0 : o;
+    };
+    ScrollTrigger.create({ start: 0, end: 'max', onUpdate: fallUpd, onRefresh: fallUpd }); fallUpd();
     var logo = $('img', logoW);
     if (!coarse) {
       var rx = gsap.quickTo(logo, 'rotateY', { duration: 1.2, ease: 'power3' });
