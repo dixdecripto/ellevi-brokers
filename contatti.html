@@ -5,10 +5,18 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Contatti · Ellevi Brokers</title>
-<meta name="description" content="Ellevi Brokers, consulenza e intermediazione assicurativa e finanziaria. Napoli.">
+<meta name="description" content="Contatta Ellevi Brokers: Via Francesco Crispi 73/75, 80122 Napoli. Telefono +39 081 2185820, e-mail info@ellevibrokers.it.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ellevi Brokers">
+<meta property="og:title" content="Contatti · Ellevi Brokers">
+<meta property="og:description" content="Contatta Ellevi Brokers: Via Francesco Crispi 73/75, 80122 Napoli. Telefono +39 081 2185820, e-mail info@ellevibrokers.it.">
+<meta property="og:locale" content="it_IT">
+<meta property="og:locale:alternate" content="en_GB">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="fonts/Jost-wght.ttf?v=20261015h" as="font" type="font/ttf" crossorigin>
-<link rel="stylesheet" href="css/site.css?v=20261015h">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preload" href="fonts/Jost-wght.woff2?v=20261104a" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css?v=20261104a">
 </head>
 <body>
 <header class="nav" data-nav>
@@ -33,11 +41,11 @@
 <section class="sec intro intro--tav" data-sec>
   <div class="gridlines gridlines--rule" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
   <div class="cols"><div class="col-text">
-    <p class="intro__text split" data-split>Vogliamo conoscere le persone <br>dietro ogni idea, per fornire servizi di <br>consulenza su misura e creare progetti <br>sostenibili di crescita e innovazione.</p>
+    <h1 class="intro__text split" data-split>Vogliamo conoscere le persone <br>dietro ogni idea, per fornire servizi di <br>consulenza su misura e creare progetti <br>sostenibili di crescita e innovazione.</h1>
     <div data-rise><a class="pill " href="#modulo">Contatti</a></div>
   </div></div>
 </section>
-<div class="band band--light" data-band><img src="img/c-hero-contatti.jpg" alt="" loading="eager"></div><div id="modulo"></div><section class="sec contact" data-sec>
+<div class="band band--light" data-band><img src="img/c-hero-contatti.jpg" srcset="img/c-hero-contatti-1200.jpg 1200w, img/c-hero-contatti.jpg 2400w" sizes="(max-width: 900px) 160vw, (max-aspect-ratio: 4/5) 160vw, 108vw" alt="" loading="eager"></div><div id="modulo"></div><section class="sec contact" data-sec>
   <div class="cols">
     <div class="col-left">
       <h2 class="h-up split" data-split>Entra in<br>contatto</h2>
@@ -48,8 +56,8 @@
     </div>
     <div class="col-text">
       <form class="form" data-form data-rise novalidate>
-        <div class="field"><label for="nome">Nome*</label><input id="nome" name="nome" type="text" required></div><div class="field"><label for="cognome">Cognome*</label><input id="cognome" name="cognome" type="text" required></div><div class="field"><label for="azienda">Azienda</label><input id="azienda" name="azienda" type="text"></div><div class="field"><label for="telefono">Telefono*</label><input id="telefono" name="telefono" type="tel" required></div><div class="field"><label for="email">E-mail*</label><input id="email" name="email" type="email" required></div><div class="field"><label for="sede">Sede</label><input id="sede" name="sede" type="text"></div><div class="field"><label for="messaggio">Messaggio*</label><textarea id="messaggio" name="messaggio" rows="3" required></textarea></div>
-        <label class="consent" for="privacy"><input id="privacy" type="checkbox" required><span>Presto il consenso al trattamento dei dati personali ai sensi del Regolamento UE 2016/679 e dell’art. 13 del D.Lgs. 196/2003. Resta salva la facoltà dell’assicurato o del contraente di presentare reclamo per iscritto a Ellevi Brokers S.r.l., Via Francesco Crispi 73/75, 80122 Napoli, oppure all’IVASS, Via del Quirinale 21, 00187 Roma.</span></label>
+        <div class="field"><label for="nome">Nome*</label><input id="nome" name="nome" type="text" autocomplete="given-name" required></div><div class="field"><label for="cognome">Cognome*</label><input id="cognome" name="cognome" type="text" autocomplete="family-name" required></div><div class="field"><label for="azienda">Azienda</label><input id="azienda" name="azienda" type="text" autocomplete="organization"></div><div class="field"><label for="telefono">Telefono*</label><input id="telefono" name="telefono" type="tel" autocomplete="tel" required></div><div class="field"><label for="email">E-mail*</label><input id="email" name="email" type="email" autocomplete="email" required></div><div class="field"><label for="sede">Sede</label><input id="sede" name="sede" type="text"></div><div class="field"><label for="messaggio">Messaggio*</label><textarea id="messaggio" name="messaggio" rows="3" required></textarea></div>
+        <label class="consent" for="privacy"><input id="privacy" name="privacy" type="checkbox" value="1" required><span>Presto il consenso al trattamento dei dati personali ai sensi del Regolamento UE 2016/679 e dell’art. 13 del D.Lgs. 196/2003. Resta salva la facoltà dell’assicurato o del contraente di presentare reclamo per iscritto a Ellevi Brokers S.r.l., Via Francesco Crispi 73/75, 80122 Napoli, oppure all’IVASS, Via del Quirinale 21, 00187 Roma.</span></label>
         <button class="pill pill--dark" type="submit">Invia</button>
         <p class="form__msg" data-form-msg role="status"></p>
       </form>
@@ -57,7 +65,7 @@
   </div>
 </section><section class="sec map" data-sec>
   <a class="map__frame" href="https://www.google.com/maps/search/?api=1&amp;query=Via+Francesco+Crispi+73,+80122+Napoli" target="_blank" rel="noopener" data-zoomin>
-    <img src="img/c-mappa.jpg" alt="Mappa di Napoli con la sede di Ellevi Brokers in Via Francesco Crispi" loading="lazy"><span class="map__pin"></span>
+    <img src="img/c-mappa.jpg" srcset="img/c-mappa-1200.jpg 1200w, img/c-mappa.jpg 2400w" sizes="(max-width: 900px) 144vw, (max-aspect-ratio: 4/5) 144vw, 80vw" alt="Mappa di Napoli con la sede di Ellevi Brokers in Via Francesco Crispi" loading="lazy"><span class="map__pin"></span>
   </a>
   <div class="map__links label"><a href="https://www.google.com/maps/search/?api=1&amp;query=Via+Francesco+Crispi+73,+80122+Napoli" target="_blank" rel="noopener">Google Maps</a><a href="https://maps.apple.com/?q=Via+Francesco+Crispi+73,+80122+Napoli" target="_blank" rel="noopener">Apple Maps</a></div>
 </section><section class="sec stack-sec fade-bottom" data-sec data-stacksec>
@@ -83,9 +91,9 @@
   </div>
   <div class="foot__base"><span>ELLEVI BROKERS S.R.L.</span><div class="foot__base-r"><span>Copyright and License</span><span>© 2026</span></div></div>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="js/site.js?v=20261015h"></script>
+<script src="js/vendor/gsap.min.js"></script>
+<script src="js/vendor/ScrollTrigger.min.js"></script>
+<script src="js/vendor/lenis.min.js"></script>
+<script src="js/site.js?v=20261104a"></script>
 </body>
 </html>
