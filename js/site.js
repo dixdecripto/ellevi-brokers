@@ -77,7 +77,7 @@
     var pv = $('#privacy', form); if (pv) pv.addEventListener('change', function () { if (pv.checked) { pv.closest('.consent').classList.remove('is-err'); pv.removeAttribute('aria-invalid'); } });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var msg = $('[data-form-msg]', form); var bad = $$('[required]', form).filter(function (el) { return el.type === 'checkbox' ? !el.checked : !el.value.trim(); });
+      var msg = $('[data-form-msg]', form); var bad = $$('[required]', form).filter(function (el) { return el.type === 'checkbox' ? !el.checked : !el.value.trim() || (el.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim())); });
       $$('[required]', form).forEach(function (el) { var on = bad.indexOf(el) > -1; el.setAttribute('aria-invalid', on ? 'true' : 'false'); el.closest('.field, .consent').classList.toggle('is-err', on); });
       msg.classList.toggle('is-err', !!bad.length);
       if (bad.length) { msg.textContent = EN ? 'Please fill in the fields marked with an asterisk and give your privacy consent.' : 'Completa i campi con l’asterisco e il consenso privacy.'; msg.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(function () { bad[0].focus({ preventScroll: true }); }, 500); return; }
