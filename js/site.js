@@ -4,7 +4,6 @@
   var doc = document.documentElement;
   var EN = doc.lang === 'en';
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
-  if (!location.hash) window.scrollTo(0, 0);
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var coarse = window.matchMedia('(hover: none), (pointer: coarse)').matches;
   var hasG = !!(window.gsap && window.ScrollTrigger);
@@ -35,9 +34,7 @@
   var nav = $('[data-nav]'), orbitSec = $('[data-orbit]');
   function onScroll() {
     if (!nav) return;
-    var hero = $('.hero');
-    var soglia = hero ? hero.offsetHeight * 0.55 : 24;
-    nav.classList.toggle('is-glass', window.scrollY > soglia);
+    nav.classList.toggle('is-glass', window.scrollY > 24);
     var foot = $('.foot');
     nav.classList.toggle('is-foot', !!foot && foot.getBoundingClientRect().top <= nav.offsetHeight);
   }
@@ -97,15 +94,49 @@
   });
 
   
+  var COMPACT_Q = window.matchMedia('(max-width: 900px), (max-aspect-ratio: 4/5)');
+  $$('[data-stack]').forEach(function (st) {
+    var x0 = null, y0 = 0, moved = false, lock = null;
+    st.addEventListener('pointerdown', function (e) { if (!COMPACT_Q.matches) return; x0 = e.clientX; y0 = e.clientY; moved = false; lock = null; });
+    st.addEventListener('pointermove', function (e) {
+      if (x0 === null) return;
+      var dx = e.clientX - x0, dy = e.clientY - y0;
+      if (lock === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (lock !== 'x' || Math.abs(dx) < 36 || !st._on) return;
+      var cards = st._cards, k = cards.indexOf(cards.filter(function (c) { return c.classList.contains('is-on'); })[0]);
+      var n2 = Math.max(0, Math.min(cards.length - 1, k + (dx < 0 ? -1 : 1)));
+      if (n2 !== k) st._on(cards[n2]);
+      x0 = null; moved = true;
+    });
+    var end = function () { x0 = null; };
+    st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end); st.addEventListener('pointerleave', end);
+    st.addEventListener('click', function (e) { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+    st.addEventListener('dragstart', function (e) { e.preventDefault(); });
+  });
+
+  
   document.body.classList.add('stile-piatto');
 
   
   $$('[data-stack]').forEach(function (st) {
     var cards = $$('[data-card]', st);
+    function labs() {
+      cards.forEach(function (x) {
+        var p = $('.pill', x), d = +x.getAttribute('data-d'), ok = d === 0;
+        if (!ok && p) {
+          var front = cards.filter(function (y) { return +y.getAttribute('data-d') < d; });
+          var free = Math.min.apply(null, front.map(function (y) { return y.offsetLeft - x.offsetLeft; }));
+          ok = free > 0 && free >= p.offsetLeft + p.offsetWidth + 6;
+        }
+        x.classList.toggle('lab-ok', ok);
+      });
+    }
     function on(c) {
       var k = cards.indexOf(c);
       cards.forEach(function (x, i) { x.classList.toggle('is-on', x === c); x.setAttribute('data-d', Math.abs(i - k)); });
+      labs();
     }
+    window.addEventListener('resize', labs); window.addEventListener('load', labs);
     on(cards.filter(function (x) { return x.classList.contains('is-on'); })[0] || cards[cards.length - 1]);
     cards.forEach(function (c) {
       c.addEventListener('mouseenter', function () { if (!coarse) on(c); });
@@ -143,9 +174,6 @@
   $$('[data-rise]').forEach(function (el) {
     gsap.from(el, { y: 24, opacity: 0, duration: 1.1, ease: E, delay: 0.15, scrollTrigger: { trigger: el, start: 'top 92%', once: true } });
   });
-  $$('.gridlines').forEach(function (g) {
-    gsap.from($$('span', g), { scaleY: 0, duration: 1.6, ease: 'power3.inOut', stagger: 0.07, scrollTrigger: { trigger: g.parentNode, start: 'top 85%', once: true } });
-  });
   var mark = $('[data-mark] .clip');
   if (mark) {
     gsap.fromTo(mark, { clipPath: 'inset(100% 0% 0% 0%)', yPercent: 18 }, { clipPath: 'inset(0% 0% 0% 0%)', yPercent: 0, duration: 1.6, ease: 'expo.inOut', delay: 0.25 });
@@ -156,12 +184,36 @@
     var oq = function (s) { return $$(s, orbit); };
     var L = function (el) { return el.getTotalLength ? el.getTotalLength() + 2 : 3000; };
     var draw = function (els) { els.forEach(function (el) { el.removeAttribute('pathLength'); }); return els; };
-    var grow = function (els, vars, at) {
-      otl.fromTo(els, { strokeDasharray: function (i, el) { return L(el); }, strokeDashoffset: function (i, el) { return L(el); } },
+    var grow = function (els, vars, at, tl) {
+      (tl || otl).fromTo(els, { strokeDasharray: function (i, el) { return L(el); }, strokeDashoffset: function (i, el) { return L(el); } },
         Object.assign({ strokeDashoffset: 0, immediateRender: true }, vars), at);
     };
-    var svg = $('.orbit__svg', orbit), C = 960, XS = [48, 352, 656, 1264, 1568, 1872];
+    var svg = $('.orbit__svg', orbit), C = 960, XS = [48, 352, 656, 1264, 1568, 1872], GE = 540;
+    var COMPACT = '(max-width: 900px), (max-aspect-ratio: 4/5)';
+    var geoMobile = function () {
+      var W = svg.getBoundingClientRect().width || innerWidth, s = W / 1920, Hv = (pinEl.clientHeight || innerHeight) / s;
+      svg.setAttribute('viewBox', '0 0 1920 ' + Hv.toFixed(1));
+      svg.style.setProperty('--sw', (1 / s).toFixed(3));
+      var gut = Math.max(16, 0.049 * innerWidth) / s, cw = (1920 - 2 * gut) / 4;
+      var X = [gut, gut + cw, null, null, 1920 - gut - cw, 1920 - gut];
+      var E = Hv * 0.53, rxO = 960 - gut, ry = Math.min(rxO * 0.745, E - 90 / s), T = E - ry, B = E + ry, top = -40 / s;
+      GE = E;
+      var show = function (el, on) { el.style.display = on ? '' : 'none'; };
+      oq('[data-gv]').forEach(function (l, i) { show(l, X[i] !== null); if (X[i] === null) return; l.setAttribute('x1', X[i]); l.setAttribute('x2', X[i]); l.setAttribute('y1', top); l.setAttribute('y2', E); });
+      oq('[data-gaxt]').forEach(function (l) { l.setAttribute('y1', top); l.setAttribute('y2', E); });
+      oq('[data-geq]').forEach(function (l, i) { l.setAttribute('y1', E); l.setAttribute('y2', E); l.setAttribute('x2', i ? 1920 : 0); });
+      oq('[data-gax]').forEach(function (l) { l.setAttribute('y1', E); l.setAttribute('y2', B + 30 / s); });
+      oq('[data-gaxu]').forEach(function (l) { l.setAttribute('y1', E); l.setAttribute('y2', T - 30 / s); });
+      oq('[data-glo]').forEach(function (p, i) { show(p, X[i] !== null); if (X[i] === null) return; var x = X[i], L = x < C; p.setAttribute('d', 'M' + x + ' ' + E + ' A' + Math.abs(C - x) + ' ' + ry + ' 0 0 ' + (L ? 0 : 1) + ' ' + C + ' ' + B); });
+      oq('[data-gup]').forEach(function (p, i) { show(p, X[i] !== null); if (X[i] === null) return; var x = X[i], L = x < C; p.setAttribute('d', 'M' + x + ' ' + E + ' A' + Math.abs(C - x) + ' ' + ry + ' 0 0 ' + (L ? 1 : 0) + ' ' + C + ' ' + T); });
+      oq('[data-gdg]').forEach(function (l, i) { l.setAttribute('x2', i % 2 ? 1920 : 0); l.setAttribute('y1', E); l.setAttribute('y2', i < 2 ? T - (ry * .35) : B + ry * .35); });
+    };
     var geo = function () {
+      if (window.matchMedia(COMPACT).matches) { geoMobile(); return; }
+      svg.setAttribute('viewBox', '0 0 1920 1080'); GE = 540;
+      oq('[data-gv], [data-glo], [data-gup]').forEach(function (el) { el.style.display = ''; });
+      oq('[data-geq]').forEach(function (l, i) { l.setAttribute('x2', i ? 1872 : 48); });
+      oq('[data-gdg]').forEach(function (l, i) { l.setAttribute('x2', [75, 1845, 75, 1845][i]); });
       var s = svg.getBoundingClientRect().width / 1920 || 1;
       svg.style.setProperty('--sw', (1 / s).toFixed(3));
       var half = innerHeight / 2 / s;
@@ -175,10 +227,11 @@
       oq('[data-gup]').forEach(function (p, i) { var x = XS[i], L = x < C; p.setAttribute('d', 'M' + x + ' ' + E + ' A' + Math.abs(C - x) + ' ' + ry + ' 0 0 ' + (L ? 1 : 0) + ' ' + C + ' ' + T); });
       oq('[data-gdg]').forEach(function (l, i) { l.setAttribute('y1', E); l.setAttribute('y2', i < 2 ? T : B); });
     };
+    var pinEl = $('[data-orbit-pin]', orbit);
     geo();
     var gv = draw(oq('[data-gv], [data-gaxt]')), eqs = draw(oq('[data-geq]')), axd = draw(oq('[data-gax]')), axu = draw(oq('[data-gaxu]')),
       lo = draw(oq('[data-glo]')), up = draw(oq('[data-gup]')), dg = draw(oq('[data-gdg]'));
-    var logoW = $('[data-logo]', orbit), tags = $$('.orbit__tag', orbit), pinEl = $('[data-orbit-pin]', orbit);
+    var logoW = $('[data-logo]', orbit), tags = $$('.orbit__tag', orbit);
     gsap.set(gv, { opacity: 0 });
     var fall = document.createElement('div');
     fall.className = 'fall-lines'; fall.setAttribute('aria-hidden', 'true');
@@ -186,22 +239,28 @@
     document.body.appendChild(fall);
     var otl = gsap.timeline({ defaults: { ease: 'none' },
       scrollTrigger: { trigger: pinEl, start: 'top top', end: '+=240%', pin: true, scrub: 0.5, invalidateOnRefresh: true, onRefreshInit: geo } });
-    otl.to({}, { duration: 0.2 }, 0)
+    var etl = gsap.timeline({ defaults: { ease: 'none' },
+      scrollTrigger: { trigger: pinEl, start: 'top 85%', end: 'top top', scrub: 0.5, invalidateOnRefresh: true } });
+    etl.fromTo(logoW, { opacity: 0, y: 80, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 1 }, 0);
+    grow(eqs.concat(axd), { duration: 0.8 }, 0.2, etl);
+    otl.to({}, { duration: 0.1 }, 0)
       .set({}, {}, 2.5)
-      .fromTo(logoW, { opacity: 0, y: 80, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 1.2 }, 0)
-      .fromTo(tags, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.2 }, 0.8);
-    grow(lo.concat(eqs, axd), { duration: 1 }, 0.2);
-    grow(up.concat(axu, dg), { duration: 1 }, 1.2);
+      .fromTo(tags, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.2 }, 0.4);
+    grow(lo, { duration: 1 }, 0);
+    grow(up.concat(axu, dg), { duration: 1 }, 1);
     var fallUpd = function () {
       var st = otl.scrollTrigger; if (!st) return;
-      var y = window.scrollY, d = st.end - st.start, reach = st.start * 0.6; // più veloci: all'equatore prima del fermo
-      var r = svg.getBoundingClientRect(), eqY = (st.progress > 0 && st.progress < 1 ? r.top : (innerHeight - r.height) / 2) + 540 * r.width / 1920;
-      var h = Math.max(0, Math.min(1, y / reach)) * eqY;
+      var y = window.scrollY, d = st.end - st.start;
+      var r = svg.getBoundingClientRect(), eqY = r.top + GE * r.width / 1920;
+      var h = Math.max(0, Math.min(innerHeight, eqY));
+      var hb = heroEl ? Math.max(0, Math.min(innerHeight, heroEl.getBoundingClientRect().bottom)) : 0;
       var o = 1 - Math.max(0, Math.min(1, (y - (st.start + d * 1.2 / 2.5)) / (d / 2.5)));
-      fall.style.clipPath = 'inset(0 0 ' + Math.max(0, innerHeight - h) + 'px 0)';
+      fall.style.clipPath = 'inset(' + Math.min(hb, h) + 'px 0 ' + Math.max(0, innerHeight - h) + 'px 0)';
       fall.style.opacity = y > st.end ? 0 : o;
     };
+    var heroEl = $('.hero');
     ScrollTrigger.create({ start: 0, end: 'max', onUpdate: fallUpd, onRefresh: fallUpd }); fallUpd();
+    requestAnimationFrame(fallUpd); window.addEventListener('load', fallUpd); window.addEventListener('resize', fallUpd);
     var logo = $('img', logoW);
     if (!coarse) {
       var rx = gsap.quickTo(logo, 'rotateY', { duration: 1.2, ease: 'power3' });
@@ -236,11 +295,13 @@
     var flat = document.body.classList.contains('stile-piatto'), tilt = flat ? 0 : 1;
     var cx = function (f) { return (parseFloat(f.style.getPropertyValue('--x')) || 0) + (parseFloat(f.style.getPropertyValue('--w')) || 0) / 2; };
     gsap.matchMedia().add('(min-width: 901px) and (min-aspect-ratio: 4/5)', function () {
-      var tl = gsap.timeline({ scrollTrigger: { trigger: pinEl, start: 'top top', end: '+=230%', pin: true, scrub: 0.9, refreshPriority: 2, invalidateOnRefresh: true } });
+      var lead = $('[data-lead-ph]', sec);
+      var tl = gsap.timeline({ scrollTrigger: { trigger: pinEl, start: 'top top', end: lead ? '+=280%' : '+=230%', pin: true, scrub: lead ? 1.6 : 0.9, refreshPriority: 2, invalidateOnRefresh: true } });
       tl.set({}, {}, 1);
       var after = false; // dal 14/10 la schermata testo dell'About ha la sua foto che scorre: la cascata parte come nelle aree
       phs.forEach(function (f, i) {
         var side = cx(f) < 960 ? 1 : -1, t0 = after ? i * 0.13 : 0.2 + i * 0.13, d = 0.4;
+        if (lead) { t0 = [0.36, 0.14, 0.46][i] || 0.4; d = 0.48; }
         if (after && i === 0) {
           gsap.fromTo(f, { y: function () { return innerHeight * 0.9; }, rotationX: 24 * tilt, rotationY: 16 * side * tilt, scale: flat ? 1 : 0.94 },
             { y: 0, rotationX: 6 * tilt, rotationY: 6 * side * tilt, scale: 1, ease: 'power2.out', immediateRender: true,
@@ -249,13 +310,12 @@
           return;
         }
         tl.fromTo(f, { y: function () { return pinEl.clientHeight - (stage.offsetTop + f.offsetTop) + 60; }, rotationX: 24 * tilt, rotationY: 16 * side * tilt, scale: flat ? 1 : 0.94 },
-          { y: 0, rotationX: 6 * tilt, rotationY: 6 * side * tilt, scale: 1, ease: 'power3.out', duration: d, immediateRender: true }, t0)
+          { y: 0, rotationX: 6 * tilt, rotationY: 6 * side * tilt, scale: 1, ease: lead ? 'sine.out' : 'power3.out', duration: d, immediateRender: true }, t0)
           .to(f, { rotationX: 6 * tilt, rotationY: 12 * side * tilt, rotation: 3 * side * tilt, ease: 'none', duration: 1 - t0 - d }, t0 + d);
       });
-      var lead = $('[data-lead-ph]', sec);
       if (lead) {
-        gsap.from(lead, { y: 80, opacity: 0, duration: 1.4, ease: E, scrollTrigger: { trigger: sec, start: 'top 70%', once: true } });
-        tl.to(lead, { y: function () { return -(stage.offsetTop + lead.offsetTop + lead.offsetHeight + 80); }, ease: 'power2.in', duration: 0.32 }, 0.04);
+        gsap.from(lead, { y: 50, opacity: 0, duration: 2, ease: 'power2.out', scrollTrigger: { trigger: sec, start: 'top 70%', once: true } });
+        tl.to(lead, { y: function () { return -(stage.offsetTop + lead.offsetTop + lead.offsetHeight + 80); }, ease: 'sine.inOut', duration: 0.32 }, 0.03);
       }
       phs.forEach(function (f) {
         var sp = parseFloat(f.getAttribute('data-casc-speed')) || 1;
@@ -294,6 +354,7 @@
     });
     gsap.matchMedia().add('(max-width: 900px), (max-aspect-ratio: 4/5)', function () {
       phs.forEach(function (f) {
+        if (!$('[data-lead-ph]', sec) && f === phs[0]) return;
         var sp = parseFloat(f.getAttribute('data-casc-speed')) || 1;
         gsap.fromTo(f, { y: 70 * sp }, { y: -50 * sp, ease: 'none', scrollTrigger: { trigger: f, start: 'top bottom', end: 'bottom top', scrub: true } });
       });
@@ -309,18 +370,21 @@
   });
   var fog = $('[data-fog]');
   if (fog) {
-    gsap.to(fog, { yPercent: 14, scale: 1.08, ease: 'none', scrollTrigger: { trigger: fog.parentNode, start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.to($('img', fog), { scale: 1.08, ease: 'none', scrollTrigger: { trigger: fog.parentNode, start: 'top top', end: 'bottom top', scrub: true } });
   }
   $$('[data-stack]').forEach(function (st) {
     var sec = st.closest('[data-stacksec]') || st.parentNode;
-    gsap.from(st._cards, { x: function (i) { return -(70 + i * 20); }, opacity: 0, ease: "power2.out", stagger: { each: 0.22, from: 'end' },
-      scrollTrigger: { trigger: st, start: 'top 95%', end: 'top 30%', scrub: 0.7 } });
-    var pick = function (p) { st._on(st._cards[Math.min(st._cards.length - 1, Math.floor(p * st._cards.length * 0.999))]); };
+    gsap.matchMedia().add('(min-width: 901px) and (min-aspect-ratio: 4/5)', function () {
+      gsap.from(st._cards, { x: function (i) { return -(40 + i * 14); }, opacity: 0, ease: "power2.out", stagger: { each: 0.22, from: 'end' },
+        scrollTrigger: { trigger: st, start: 'top 95%', end: 'top 30%', scrub: 0.7 } });
+    });
+    var pick = function (p) { var n = st._cards.length; st._on(st._cards[n - 1 - Math.min(n - 1, Math.floor(p * n * 0.999))]); };
     gsap.matchMedia().add('(min-width: 901px) and (min-aspect-ratio: 4/5)', function () {
       ScrollTrigger.create({ trigger: sec, start: 'top top', end: '+=140%', pin: true, onUpdate: function (s) { pick(s.progress); } });
     });
     gsap.matchMedia().add('(max-width: 900px), (max-aspect-ratio: 4/5)', function () {
-      ScrollTrigger.create({ trigger: st, start: 'top 70%', end: 'bottom 30%', onUpdate: function (s) { pick(s.progress); } });
+      gsap.from(st._cards, { x: -24, opacity: 0, duration: 1.1, ease: 'power2.out', stagger: { each: 0.15, from: 'end' },
+        scrollTrigger: { trigger: st, start: 'top 85%', once: true } });
     });
   });
   var ROLL_A = [1, 0.75, 0.37, 0.17, 0.1, 0.07];
@@ -358,19 +422,33 @@
   var planSec = $('[data-plan]');
   if (planSec) {
     var wheel = $('[data-wheel]', planSec), steps = $$('[data-step]', planSec), curStep = 0;
+    var marks = $('[data-marks]', planSec), sel = $('[data-sel]', planSec), disc = $('[data-disc]', planSec), selRot = 0;
+    var placeSel = function () {
+      if (!sel || !disc || !marks || getComputedStyle(sel).display === 'none') return;
+      var st = steps[curStep], h = $('h2', st), p = $('p', st);
+      var S = planSec.getBoundingClientRect(), D = disc.getBoundingClientRect(), Hr = h.getBoundingClientRect(), Pr = p.getBoundingClientRect();
+      var sc = gsap.getProperty(disc, 'scale') || 1, w = D.width / sc;
+      var cx = D.left + D.width / 2 - S.left, cy = D.top + D.height / 2 - S.top, R = w / 2, r = w * 0.255;
+      var y = (Hr.bottom + Pr.top) / 2 - S.top, dy = Math.max(-0.8 * r, Math.min(0.8 * r, y - cy)); y = cy + dy;
+      var dx = Math.sqrt(r * r - dy * dy), x0 = Hr.left - S.left, x1 = cx - dx;
+      sel.style.left = x0 + 'px'; sel.style.top = y + 'px'; sel.style.width = Math.max(0, x1 - x0) + 'px';
+      sel.style.setProperty('--edge', Math.max(0, cx - Math.sqrt(Math.max(0, R * R - dy * dy)) - x0) + 'px');
+      selRot = Math.atan2(dy, -dx) * 180 / Math.PI - 180; if (selRot < -180) selRot += 360;
+    };
     var setStep = function (i) {
       if (i === curStep) return; curStep = i;
       steps.forEach(function (s, k) { s.classList.toggle('is-on', k === i); });
       gsap.to(wheel, { rotation: -120 * i, duration: 1.4, ease: 'power3.inOut', overwrite: true });
+      if (marks) gsap.to(marks, { rotation: selRot - 120 * i, duration: 1.4, ease: 'power3.inOut', overwrite: true });
     };
-    var mm = gsap.matchMedia();
-    mm.add('(min-width: 901px) and (min-aspect-ratio: 4/5)', function () {
-      ScrollTrigger.create({ trigger: planSec, start: 'top top', end: '+=160%', pin: true,
-        onUpdate: function (s) { setStep(Math.min(2, Math.floor(s.progress * 3 * 0.999))); } });
-    });
-    mm.add('(max-width: 900px), (max-aspect-ratio: 4/5)', function () {
-      gsap.to(wheel, { rotation: -240, ease: 'none', scrollTrigger: { trigger: '[data-disc]', start: 'top 80%', end: 'bottom 20%', scrub: 0.8 } });
-    });
+    if (sel) {
+      ScrollTrigger.create({ trigger: planSec, start: 'top 55%', onEnter: function () { placeSel(); sel.classList.add('is-on'); },
+        onLeaveBack: function () { sel.classList.remove('is-on'); },
+        onRefresh: function () { placeSel(); if (marks) gsap.set(marks, { rotation: selRot - 120 * curStep }); } });
+      placeSel(); if (marks) gsap.set(marks, { rotation: selRot });
+    }
+    ScrollTrigger.create({ trigger: planSec, start: 'top top', end: '+=160%', pin: true,
+      onUpdate: function (s) { setStep(Math.min(2, Math.floor(s.progress * 3 * 0.999))); } });
     gsap.from('[data-disc]', { scale: 0.85, opacity: 0, duration: 1.6, ease: E, scrollTrigger: { trigger: planSec, start: 'top 75%', once: true } });
   }
   $$('[data-zoomin]').forEach(function (m) {
